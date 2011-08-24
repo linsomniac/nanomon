@@ -4,7 +4,7 @@
 #
 #  Copyright (c) 2011, Sean Reifschneider <jafo@tummy.com>, All Rights Reserved
 
-configFile = 'nanomon.conf'
+configFile = '/usr/local/etc/nanomon.conf'
 
 import sys
 import syslog
