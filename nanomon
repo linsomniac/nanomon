@@ -4,6 +4,8 @@
 #
 #  Copyright (c) 2011, Sean Reifschneider <jafo@tummy.com>, All Rights Reserved
 
+from __future__ import with_statement
+
 configFile = '/usr/local/etc/nanomon.conf'
 
 import sys
@@ -84,16 +86,16 @@ def runcommands(config):
 			if not ret:
 				failures.append('Check "%s"' % command[0])
 				failures.append('Function returned "%s"' % ( repr(ret), ))
-				failures.append('   Output: %s' % output.rstrip())
-				failures.append('   Stderr: %s' % errors.rstrip())
+				failures.append('   Output: %s' % format(output))
+				failures.append('   Stderr: %s' % format(errors))
 				any_failed = True
 		else:
 			#print 'in', command[1], output
 			if command[1] not in output:
 				failures.append('Check "%s"' % command[0])
 				failures.append('String "%s" not found in output' % ( command[1], ))
-				failures.append('   Output: %s' % output.rstrip())
-				failures.append('   Stderr: %s' % errors.rstrip())
+				failures.append('   Output: %s' % format(output))
+				failures.append('   Stderr: %s' % format(errors))
 				any_failed = True
 
 	config.any_failed = any_failed
@@ -127,6 +129,12 @@ def savestatus(config, status):
 	with open(config.statusfile + '.tmp', 'w') as fp:
 		data = pickle.dump(status, fp)
 	os.rename(config.statusfile + '.tmp', config.statusfile)
+
+
+##############
+def format(s):
+	if s == None: return s
+	return s.rstrip()
 
 
 ###########################
