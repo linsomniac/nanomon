@@ -157,7 +157,6 @@ def sendmail(config, isup):
 			proc.stdin.write('%s\n' % line)
 	proc.stdin.close()
 	proc.wait()
-	print 'Sent mail'
 
 
 ###########
@@ -199,8 +198,6 @@ def main():
 
 	if send_alert:
 		sendmail(config, old_status['isup'])
-
-	print send_alert, old_status
 
 
 ######
