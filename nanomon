@@ -8,6 +8,7 @@ from __future__ import with_statement
 
 configFile = '/usr/local/etc/nanomon.conf'
 
+import os
 import sys
 import syslog
 syslog.openlog('nanomon', syslog.LOG_PID)
@@ -23,8 +24,8 @@ def loadConfigFile(configFile):
 			self.mailto = None
 			self.maxfailures = 15
 
-		def cmd_command(self, command, success):
-			self.commands.append(( command, success ))
+		def cmd_command(self, command, success, description = None):
+			self.commands.append(( command, success, description ))
 
 		def cmd_statusfile(self, statusfile):
 			self.statusfile = statusfile
@@ -61,45 +62,54 @@ def runcommands(config):
 	import shlex, subprocess
 
 	failures = []
+	descriptions = []
 	any_failed = False
-	for command in config.commands:
-		if isinstance(command[0], str):
-			args = shlex.split(command[0])
+	for command, success, description in config.commands:
+		if isinstance(command, str):
+			args = shlex.split(command)
 		else:
-			args = command[0]
+			args = command
 
-		proc = subprocess.Popen(args, stdout = subprocess.PIPE, close_fds = True)
+		if description == None:
+			description = os.path.basename(args[0])
+
+		proc = subprocess.Popen(args, stdout = subprocess.PIPE,
+				stderr = subprocess.PIPE, close_fds = True)
 		output, errors = proc.communicate()
 
-		if isinstance(command[1], int):
-			#print 'int', proc.returncode, command[1]
-			if proc.returncode != command[1]:
-				failures.append('Check "%s"' % command[0])
+		if isinstance(success, int):
+			#print 'int', proc.returncode, success
+			if proc.returncode != success:
+				descriptions.append(description)
+				failures.append('Check "%s"' % command)
 				failures.append('Exit=%s expected %s'
-						% ( proc.returncode, command[1] ))
+						% ( proc.returncode, success ))
 				failures.append('   Output: %s' % output)
 				failures.append('   Stderr: %s' % errors)
 				any_failed = True
-		elif callable(command[1]):
-			#print 'func', command[1](output)
-			ret = command[1](output)
+		elif callable(success):
+			#print 'func', success(output)
+			ret = success(output)
 			if not ret:
-				failures.append('Check "%s"' % command[0])
+				descriptions.append(description)
+				failures.append('Check "%s"' % command)
 				failures.append('Function returned "%s"' % ( repr(ret), ))
 				failures.append('   Output: %s' % format(output))
 				failures.append('   Stderr: %s' % format(errors))
 				any_failed = True
 		else:
-			#print 'in', command[1], output
-			if command[1] not in output:
-				failures.append('Check "%s"' % command[0])
-				failures.append('String "%s" not found in output' % ( command[1], ))
+			#print 'in', success, output
+			if success not in output:
+				descriptions.append(description)
+				failures.append('Check "%s"' % command)
+				failures.append('String "%s" not found in output' % ( success, ))
 				failures.append('   Output: %s' % format(output))
 				failures.append('   Stderr: %s' % format(errors))
 				any_failed = True
 
 	config.any_failed = any_failed
 	config.failures = failures
+	config.descriptions = descriptions
 
 	return any_failed
 
@@ -157,7 +167,8 @@ def sendmail(config, isup):
 		proc.stdin.write('\n')
 		proc.stdin.write('Services are restored on %s\n' % hostname)
 	else:
-		proc.stdin.write('Subject: DOWN: Service OUTAGE\n\n')
+		descriptions = ', '.join(config.descriptions)
+		proc.stdin.write('Subject: DOWN: Service OUTAGE: %s\n\n' % descriptions)
 		proc.stdin.write('\n')
 		proc.stdin.write('Services have issues on %s\n' % hostname)
 		proc.stdin.write('\n')
