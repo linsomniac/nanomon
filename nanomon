@@ -4,6 +4,8 @@
 #
 #  Copyright (c) 2011, Sean Reifschneider <jafo@tummy.com>, All Rights Reserved
 
+from __future__ import with_statement
+
 configFile = '/usr/local/etc/nanomon.conf'
 
 import sys
@@ -159,8 +161,9 @@ def sendmail(config, isup):
 	proc.wait()
 
 
-###########
-def main():
+#############################
+def loadconfig(configFile):
+	'''A wrapper for loading the config file which displays errors.'''
 	try:
 		config = loadConfigFile(configFile)
 	except IOError, e:
@@ -170,6 +173,13 @@ def main():
 			syslog.syslog('Invalid config file "%s"' % configFile)
 			sys.exit(1)
 		raise
+
+	return config
+
+
+###########
+def main():
+	config = loadconfig(configFile)
 
 	if not config.mailto:
 		print 'ERROR: No "mailto" specified in config file'
@@ -200,5 +210,38 @@ def main():
 		sendmail(config, old_status['isup'])
 
 
-######
-main()
+#############
+def status():
+	config = loadconfig(configFile)
+	old_status = loadstatus(config)
+	if old_status['isup']:
+		print 'OK'
+		sys.exit(0)
+
+	print 'ERROR: %(failures)s failures (%(descriptions)s)' % old_status
+	sys.exit(1)
+
+
+############
+def reset():
+	config = loadconfig(configFile)
+	old_status = loadstatus(config)
+	old_status['isup'] = 1
+	old_status['failures'] = 0
+	old_status['description'] = None
+	savestatus(config, old_status)
+
+
+###############
+def nanohelp():
+
+
+############################
+if 'status' in sys.argv[1:]:
+	status()
+elif 'reset' in sys.argv[1:]:
+	reset()
+elif 'help' in sys.argv[1:] or '--help' in sys.argv[1:]:
+	nanohelp()
+else:
+	main()
