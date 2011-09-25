@@ -64,3 +64,24 @@ The following steps will install nanomon:
      changed by editing the top of "nanomon")
    - Add "nanomon" to cron, for example with: `echo '* * * * * root
      /usr/local/sbin/nanomon' >/etc/cron.d/nanomon`
+
+If you would like nanomon to re-alert periodically if a failure persists,
+you can set up a cron job to run "nanomon reset", which acts like the
+service has recovered (without sending an alert).  So if it is still down,
+this would cause another alert to be sent.  However, if the service
+recovers within 15 (default) minutes of the reset, no recovery will be
+sent.
+
+Running "nanomon help" will display the help message:
+
+   usage: nanomon [status|reset|help]
+
+   With no arguments, a service check is done.  Arguments are:
+      help     This message.
+      reset    Reset the status to act as if service checks succeeded.
+               No notification is sent of the "up".  This can be used to cause
+               regular alerts to be sent if the services are still down.
+      status   Display information about the monitoring status.
+               If everything is ok, "OK" is displayed and exit code is 0.
+               Otherwise "ERROR:" is displayed followed by details, and
+               exit with 1.

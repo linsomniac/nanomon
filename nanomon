@@ -120,6 +120,7 @@ def loadstatus(config):
 	default = {
 				'failures' : 0,
 				'isup' : 1,
+				'descriptions' : None,
 				}
 
 	try:
@@ -207,8 +208,10 @@ def main():
 
 	if config.any_failed:
 		old_status['failures'] += 1
+		old_status['descriptions'] = ', '.join(config.descriptions)
 	else:
 		old_status['failures'] = 0
+		old_status['descriptions'] = None
 	alerting = old_status['failures'] > config.maxfailures
 
 	send_alert = False
@@ -231,11 +234,16 @@ def main():
 def status():
 	config = loadconfig(configFile)
 	old_status = loadstatus(config)
-	if old_status['isup']:
+	if old_status['failures'] < 1:
 		print 'OK'
 		sys.exit(0)
 
-	print 'ERROR: %(failures)s failures (%(descriptions)s)' % old_status
+	old_status['status'] = 'DOWN'
+	if old_status['isup']:
+		old_status['status'] = 'UP'
+
+	print ('ERROR: %(failures)s failures (%(descriptions)s), %(status)s'
+			% old_status)
 	sys.exit(1)
 
 
@@ -245,12 +253,24 @@ def reset():
 	old_status = loadstatus(config)
 	old_status['isup'] = 1
 	old_status['failures'] = 0
-	old_status['description'] = None
+	old_status['descriptions'] = None
 	savestatus(config, old_status)
 
 
 ###############
 def nanohelp():
+	print 'usage: %s [status|reset|help]' % os.path.basename(sys.argv[0])
+	print
+	print '''   With no arguments, a service check is done.  Arguments are:
+      help     This message.
+      reset    Reset the status to act as if service checks succeeded.
+               No notification is sent of the "up".  This can be used to cause
+               regular alerts to be sent if the services are still down.
+      status   Display information about the monitoring status.
+               If everything is ok, "OK" is displayed and exit code is 0.
+               Otherwise "ERROR:" is displayed followed by details, and
+               exit with 1.'''
+	sys.exit(0)
 
 
 ############################
