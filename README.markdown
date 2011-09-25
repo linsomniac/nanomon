@@ -74,14 +74,14 @@ sent.
 
 Running "nanomon help" will display the help message:
 
-   usage: nanomon [status|reset|help]
+    usage: nanomon [status|reset|help]
 
-   With no arguments, a service check is done.  Arguments are:
-      help     This message.
-      reset    Reset the status to act as if service checks succeeded.
-               No notification is sent of the "up".  This can be used to cause
-               regular alerts to be sent if the services are still down.
-      status   Display information about the monitoring status.
-               If everything is ok, "OK" is displayed and exit code is 0.
-               Otherwise "ERROR:" is displayed followed by details, and
-               exit with 1.
+    With no arguments, a service check is done.  Arguments are:
+       help     This message.
+       reset    Reset the status to act as if service checks succeeded.
+                No notification is sent of the "up".  This can be used to cause
+                regular alerts to be sent if the services are still down.
+       status   Display information about the monitoring status.
+                If everything is ok, "OK" is displayed and exit code is 0.
+                Otherwise "ERROR:" is displayed followed by details, and
+                exit with 1.
