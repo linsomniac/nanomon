@@ -85,3 +85,8 @@ Running "nanomon help" will display the help message:
                 If everything is ok, "OK" is displayed and exit code is 0.
                 Otherwise "ERROR:" is displayed followed by details, and
                 exit with 1.
+
+License
+-------
+
+nanomon is licensed under the GPL v3 or later.
