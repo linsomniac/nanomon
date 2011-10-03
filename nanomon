@@ -5,8 +5,6 @@
 #  Copyright (c) 2011, Sean Reifschneider <jafo@tummy.com>, All Rights Reserved
 #  Licensed under GPL version 3 or later, see "LICENSE" for more information.
 
-from __future__ import with_statement
-
 configFile = '/usr/local/etc/nanomon.conf'
 
 import os
@@ -125,12 +123,15 @@ def loadstatus(config):
 				}
 
 	try:
-		with open(config.statusfile, 'r') as fp:
-			try:
-				data = pickle.load(fp)
-			except:
-				return default
-			return data
+		fp = open(config.statusfile, 'r')
+		filedata = fp.read()
+		fp.close()
+
+		try:
+			data = pickle.loads(filedata)
+		except:
+			return default
+		return data
 	except IOError:
 		return default
 
@@ -138,8 +139,9 @@ def loadstatus(config):
 ###############################
 def savestatus(config, status):
 	import pickle, os
-	with open(config.statusfile + '.tmp', 'w') as fp:
-		data = pickle.dump(status, fp)
+	fp = open(config.statusfile + '.tmp', 'w')
+	data = pickle.dump(status, fp)
+	fp.close()
 	os.rename(config.statusfile + '.tmp', config.statusfile)
 
 
