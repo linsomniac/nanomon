@@ -72,19 +72,25 @@ this would cause another alert to be sent.  However, if the service
 recovers within 15 (default) minutes of the reset, no recovery will be
 sent.
 
-Running "nanomon help" will display the help message:
+Running "nanomon --help" will display the help message:
 
-    usage: nanomon [status|reset|help]
+   Usage: nanomon [options] [status|reset]
 
-    With no arguments, a service check is done.  Arguments are:
-       help     This message.
-       reset    Reset the status to act as if service checks succeeded.
-                No notification is sent of the "up".  This can be used to cause
-                regular alerts to be sent if the services are still down.
-       status   Display information about the monitoring status.
-                If everything is ok, "OK" is displayed and exit code is 0.
-                Otherwise "ERROR:" is displayed followed by details, and
-                exit with 1.
+   A small service checking program, which can run an series of commands,
+   check their results, and report when they repeatedly fail, and when
+   they recover.
+
+   Options:
+     -h, --help            show this help message and exit
+     -c FILE, --config=FILE
+                           Override the configuration file path
+
+   If called with the "reset" command, the status of all services is
+   reset to to the default state.  If called with the "status" command,
+   the state file is loaded and either "OK" is printed and nanomon exits
+   with 0, or information on the failed services is printed and nanomon
+   exits with 1.  If called with no command-line commands, a check of
+   all services is run.  Typically this is how it is called from cron.
 
 License
 -------
