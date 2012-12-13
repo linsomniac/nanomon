@@ -1,5 +1,5 @@
-nanomon: Extremely Small Monitoring System
-==========================================
+nanomon: Extremely Lightweight Monitoring System
+================================================
 
 Overview
 --------
