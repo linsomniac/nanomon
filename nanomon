@@ -21,6 +21,7 @@ def loadConfigFile(configFile):
 			self.debug = 0
 			self.statusfile = None
 			self.mailto = None
+			self.mailto_set = False
 			self.maxfailures = 15
 			self.mailcmd = '/usr/sbin/sendmail -t -oi'
 
@@ -32,6 +33,7 @@ def loadConfigFile(configFile):
 
 		def cmd_mailto(self, mailto):
 			self.mailto = mailto
+			self.mailto_set = True
 
 		def cmd_mailcmd(self, mailcmd):
 			self.mailcmd = mailcmd
@@ -160,9 +162,12 @@ def format(s):
 def sendmail(config, isup):
 	import subprocess, os
 
+	if not config.mailto or not config.mailcmd:
+		return
+
 	hostname = os.uname()[1]
 
-	proc = subprocess.Popen(['/usr/sbin/sendmail', '-t', '-oi'],
+	proc = subprocess.Popen(config.mailcmd.split(),
 			stdin = subprocess.PIPE, close_fds = True)
 	proc.stdin.write('From: %s\n' % config.mailto)
 	proc.stdin.write('To: %s\n' % config.mailto)
@@ -202,7 +207,7 @@ def loadconfig(configFile):
 def main():
 	config = loadconfig(configFile)
 
-	if not config.mailto:
+	if not config.mailto_set:
 		print 'ERROR: No "mailto" specified in config file'
 		sys.exit(1)
 

@@ -52,7 +52,19 @@ class test_Basic(unittest.TestCase):
 
 		check_command(self, ['python', self.nanomon_path,
 				'--config', 'basic_config', 'reset'])
-		check_command(self, ['python', self.nanomon_path,
-				'--config', 'basic_config'])
+
+		for i in xrange(15):
+			check_command(self, ['python', self.nanomon_path,
+					'--config', 'basic_config'])
+			check_command(self, ['python', self.nanomon_path,
+					'--config', 'basic_config', 'status'],
+					output=', UP', exit_code=1)
+
+		for i in xrange(15):
+			check_command(self, ['python', self.nanomon_path,
+					'--config', 'basic_config'])
+			check_command(self, ['python', self.nanomon_path,
+					'--config', 'basic_config', 'status'],
+					output=', DOWN', exit_code=1)
 
 unittest.main()
