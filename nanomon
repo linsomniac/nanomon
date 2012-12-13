@@ -22,6 +22,7 @@ def loadConfigFile(configFile):
 			self.statusfile = None
 			self.mailto = None
 			self.maxfailures = 15
+			self.mailcmd = '/usr/sbin/sendmail -t -oi'
 
 		def cmd_command(self, command, success, description = None):
 			self.commands.append(( command, success, description ))
@@ -31,6 +32,9 @@ def loadConfigFile(configFile):
 
 		def cmd_mailto(self, mailto):
 			self.mailto = mailto
+
+		def cmd_mailcmd(self, mailcmd):
+			self.mailcmd = mailcmd
 
 		def cmd_debug(self, level = 1):
 			self.debug = level
@@ -42,13 +46,14 @@ def loadConfigFile(configFile):
 			'mailto' : config.cmd_mailto,
 			'statusfile' : config.cmd_statusfile,
 			'debug' : config.cmd_debug,
+			'mailcmd' : config.cmd_mailcmd,
 			}
 
 	#  load the file
 	import re
 	try:
 		execfile(configFile, {'re' : re}, namespace)
-	except Exception, e:
+	except Exception:
 		print 'ERROR: Loading configuration file failed.  See below for details:'
 		raise
 	
@@ -255,28 +260,33 @@ def reset():
 	savestatus(config, old_status)
 
 
-###############
-def nanohelp():
-	print 'usage: %s [status|reset|help]' % os.path.basename(sys.argv[0])
-	print
-	print '''   With no arguments, a service check is done.  Arguments are:
-      help     This message.
-      reset    Reset the status to act as if service checks succeeded.
-               No notification is sent of the "up".  This can be used to cause
-               regular alerts to be sent if the services are still down.
-      status   Display information about the monitoring status.
-               If everything is ok, "OK" is displayed and exit code is 0.
-               Otherwise "ERROR:" is displayed followed by details, and
-               exit with 1.'''
-	sys.exit(0)
-
-
 ############################
-if 'status' in sys.argv[1:]:
-	status()
-elif 'reset' in sys.argv[1:]:
-	reset()
-elif 'help' in sys.argv[1:] or '--help' in sys.argv[1:]:
-	nanohelp()
-else:
-	main()
+if __name__ == '__main__':
+	from optparse import OptionParser
+
+	opt_description = ('A small service checking program, which can run an '
+			'series of commands, check their results, and report when they '
+			'repeatedly fail, and when they recover.')
+	opt_epilog = ('If called with the "reset" command, the status '
+			'of all services is reset to to the default state.  If called '
+			'with the "status" command, the state file is loaded and either '
+			'"OK" is printed and nanomon exits with 0, or information on the '
+			'failed services is printed and nanomon exits with 1.  If called '
+			'with no command-line commands, a check of all services is run.  '
+			'Typically this is how it is called from cron.')
+
+	parser = OptionParser(usage='%prog [options] [status|reset]',
+			description=opt_description, epilog=opt_epilog)
+	parser.add_option('-c', '--config', dest='config_file',
+			metavar='FILE', help='Override the configuration file path')
+	(options, args) = parser.parse_args()
+
+	if options.config_file:
+		configFile = options.config_file
+
+	if 'status' in args:
+		status()
+	elif 'reset' in args:
+		reset()
+	else:
+		main()

@@ -1,0 +1,4 @@
+statusfile('nanomon.status')
+mailcmd('mail_test')
+mailto('user@example.com')
+command('python counter_check', success = 0)
