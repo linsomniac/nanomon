@@ -140,7 +140,7 @@ def loadstatus(config):
 def savestatus(config, status):
 	import pickle, os
 	fp = open(config.statusfile + '.tmp', 'w')
-	data = pickle.dump(status, fp)
+	pickle.dump(status, fp)
 	fp.close()
 	os.rename(config.statusfile + '.tmp', config.statusfile)
 
@@ -154,11 +154,6 @@ def format(s):
 ###########################
 def sendmail(config, isup):
 	import subprocess, os
-
-	if isup:
-		subject = 'UP: Service restored'
-	else:
-		subject = 'DOWN: Service restored'
 
 	hostname = os.uname()[1]
 
@@ -207,7 +202,7 @@ def main():
 		sys.exit(1)
 
 	old_status = loadstatus(config)
-	results = runcommands(config)
+	runcommands(config)
 
 	if config.any_failed:
 		old_status['failures'] += 1
