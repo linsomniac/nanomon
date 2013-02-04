@@ -28,6 +28,9 @@ def loadConfigFile(configFile):
 		def cmd_command(self, command, success, description = None):
 			self.commands.append(( command, success, description ))
 
+		def cmd_alertafterfailures(self, maxfailures):
+			self.maxfailures = maxfailures
+
 		def cmd_statusfile(self, statusfile):
 			self.statusfile = statusfile
 
@@ -49,6 +52,7 @@ def loadConfigFile(configFile):
 			'statusfile' : config.cmd_statusfile,
 			'debug' : config.cmd_debug,
 			'mailcmd' : config.cmd_mailcmd,
+			'alertafterfailures' : config.cmd_alertafterfailures,
 			}
 
 	#  load the file

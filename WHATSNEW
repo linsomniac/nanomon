@@ -1,0 +1,5 @@
+================================
+Version 1.01 -- Mon Feb 04, 2013
+
+Adding "alertafterfailures" config setting so you can easily control how
+      long before alerts are sent.  Suggested by Martin Seener.
