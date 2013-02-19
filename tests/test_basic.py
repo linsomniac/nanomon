@@ -43,8 +43,17 @@ class test_Basic(unittest.TestCase):
 			os.remove('nanomon.status')
 		except OSError:
 			pass
+		try:
+			os.remove('test_checker')
+		except OSError:
+			pass
 
 	def test_Basic(self):
+		#  make checker fail
+		with open('test_checker', 'w') as fp:
+			fp.write('#!/bin/bash\n\nfalse\n')
+		os.chmod('test_checker', 0755)
+
 		check_command(self, ['python', self.nanomon_path, '--help'],
 				'Usage: nanomon')
 		check_command(self, ['python', self.nanomon_path,
@@ -60,11 +69,33 @@ class test_Basic(unittest.TestCase):
 					'--config', 'basic_config', 'status'],
 					output=', UP', exit_code=1)
 
+		#  Check e-mail subject
+		check_command(self, ['python', self.nanomon_path,
+				'--config', 'basic_config'],
+				output='Subject: DOWN: Service OUTAGE: test_checker')
+		check_command(self, ['python', self.nanomon_path,
+				'--config', 'basic_config', 'status'],
+				output=', DOWN', exit_code=1)
+
 		for i in xrange(15):
 			check_command(self, ['python', self.nanomon_path,
 					'--config', 'basic_config'])
 			check_command(self, ['python', self.nanomon_path,
 					'--config', 'basic_config', 'status'],
 					output=', DOWN', exit_code=1)
+
+		#  make checker succeed
+		with open('test_checker', 'w') as fp:
+			fp.write('#!/bin/bash\n\ntrue\n')
+		os.chmod('test_checker', 0755)
+
+		#  Check e-mail subject
+		check_command(self, ['python', self.nanomon_path,
+				'--config', 'basic_config'],
+				output='Subject: UP: Service restored: test_checker')
+		check_command(self, ['python', self.nanomon_path,
+				'--config', 'basic_config', 'status'],
+				output='OK', exit_code=0)
+
 
 unittest.main()

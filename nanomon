@@ -162,8 +162,8 @@ def format(s):
 	return s.rstrip()
 
 
-###########################
-def sendmail(config, isup):
+###################################
+def sendmail(config, isup, status):
 	import subprocess, os
 
 	if not config.mailto or not config.mailcmd:
@@ -176,11 +176,12 @@ def sendmail(config, isup):
 	proc.stdin.write('From: %s\n' % config.mailto)
 	proc.stdin.write('To: %s\n' % config.mailto)
 	if isup:
-		proc.stdin.write('Subject: UP: Service restored\n\n')
+		descriptions = status['last_alert_description']
+		proc.stdin.write('Subject: UP: Service restored: %s\n\n' % descriptions)
 		proc.stdin.write('\n')
 		proc.stdin.write('Services are restored on %s\n' % hostname)
 	else:
-		descriptions = ', '.join(config.descriptions)
+		descriptions = status['alert_description']
 		proc.stdin.write('Subject: DOWN: Service OUTAGE: %s\n\n' % descriptions)
 		proc.stdin.write('\n')
 		proc.stdin.write('Services have issues on %s\n' % hostname)
@@ -215,31 +216,35 @@ def main():
 		print 'ERROR: No "mailto" specified in config file'
 		sys.exit(1)
 
-	old_status = loadstatus(config)
+	status = loadstatus(config)
 	runcommands(config)
 
 	if config.any_failed:
-		old_status['failures'] += 1
-		old_status['descriptions'] = ', '.join(config.descriptions)
+		status['failures'] += 1
+		status['descriptions'] = ', '.join(config.descriptions)
 	else:
-		old_status['failures'] = 0
-		old_status['descriptions'] = None
-	alerting = old_status['failures'] > config.maxfailures
+		status['failures'] = 0
+		status['descriptions'] = None
+	alerting = status['failures'] > config.maxfailures
 
 	send_alert = False
-	if old_status['isup'] and alerting:
+	if status['isup'] and alerting:
 		#  was up, now is down
-		old_status['isup'] = 0
+		status['isup'] = 0
 		send_alert = True
-	elif not old_status['isup'] and not alerting:
+	elif not status['isup'] and not alerting:
 		#  was down, now is up
-		old_status['isup'] = 1
+		status['isup'] = 1
 		send_alert = True
-	
-	savestatus(config, old_status)
 
 	if send_alert:
-		sendmail(config, old_status['isup'])
+		status['last_alert_description'] = status.get(
+				'alert_description', 'Unknown')
+		status['alert_description'] = status.get('descriptions', 'Unknown')
+
+		sendmail(config, status['isup'], status)
+	
+	savestatus(config, status)
 
 
 #############
