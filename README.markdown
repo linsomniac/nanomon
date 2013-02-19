@@ -4,15 +4,15 @@ nanomon: Extremely Lightweight Monitoring System
 Overview
 --------
 
-nanomon is an extremely small and simple monitoring system meant largely
-for reporting on a few systems such as reporting failures on RAID arrays,
-ZFS volums, or file-systems don't fill up.  It's meant to be similar to
-a simple "check" script that one may write, but with the additional
-features:
+[nanomon](http://www.tummy.com/software/nanomon/) is an extremely small
+and simple monitoring system meant largely for reporting on a few systems
+such as reporting failures on RAID arrays, ZFS volums, or file-systems
+don't fill up.  It's meant to be similar to a simple "check" script that
+one may write, but with the additional features:
 
-   - Checks several times, so a transient failure does not result in an alert.
-   - Remembers state so that a failure doesn't generate mail with every check.
-   - Can check multiple issues from a single instance.
+ * Checks several times, so a transient failure does not result in an alert.
+ * Remembers state so that a failure doesn't generate mail with every check.
+ * Can check multiple issues from a single instance.
 
 It's meant to be a *much* simpler system than things like OpsView (which we
 use at work), Zenoss, or Zabbix, without the learning-curve of nagios
@@ -26,6 +26,20 @@ nanomon runs external programs (as specified in the config file), which can
 be simple commands or shell scripts and determines success or failure by
 either exit code, string match, or Python function (including regular
 expression match).
+
+Download
+--------
+
+Download from:
+
+ * [tummy.com FTP server](http://ftp.tummy.com/pub/tummy/nanomon/)
+ * [github Repository/Tracker](https://github.com/linsomniac/nanomon)
+
+Bugs
+----
+
+Please report any bugs on the
+[github Tracker](https://github.com/linsomniac/nanomon)
 
 Examples
 --------
