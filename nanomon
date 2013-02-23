@@ -242,9 +242,51 @@ def main():
 				'alert_description', 'Unknown')
 		status['alert_description'] = status.get('descriptions', 'Unknown')
 
+		if status['isup']:
+			syslog.syslog('Alert: UP: %s'
+					% status['last_alert_description'])
+		else:
+			syslog.syslog('Alert: DOWN: %s'
+					% status['alert_description'])
+
 		sendmail(config, status['isup'], status)
 	
 	savestatus(config, status)
+
+
+####################
+def daemon(options):
+	import time
+	import signal
+
+	if options.interval == None:
+		sys.stderr.write('ERROR: Daemon mode requires "--interval"\n')
+		sys.exit(1)
+	
+	if options.pidfile:
+		with open(options.pidfile, 'w') as fp:
+			fp.write('%s\n' % os.getpid())
+		def remove_pidfile(*args):
+			os.remove(options.pidfile)
+			sys.exit(0)
+		signal.signal(signal.SIGINT, remove_pidfile)
+		signal.signal(signal.SIGTERM, remove_pidfile)
+
+	while True:
+		time_before_check = time.time()
+		try:
+			syslog.syslog('Running check: %s' % time_before_check)
+			main()
+		except Exception, e:
+			syslog.syslog('ERROR: Received exception "%s" during check' % str(e))
+		time_after_check = time.time()
+
+		sleep_time = (time_before_check + options.interval) - time_after_check
+		if sleep_time < 0.1:
+			if options.min_interval:
+				time.sleep(options.min_interval)
+		else:
+			time.sleep(sleep_time)
 
 
 #############
@@ -287,13 +329,31 @@ if __name__ == '__main__':
 			'"OK" is printed and nanomon exits with 0, or information on the '
 			'failed services is printed and nanomon exits with 1.  If called '
 			'with no command-line commands, a check of all services is run.  '
-			'Typically this is how it is called from cron.')
+			'Typically this is how it is called from cron.  If called with '
+			'the "daemon" command, nanomon loops running its own scheduler '
+			'rather than running from cron.  This is useful if you want to run '
+			'checks more frequently than every minute.')
 
-	parser = OptionParser(usage='%prog [options] [status|reset]',
+	parser = OptionParser(usage='%prog [options] [status|reset|daemon]',
 			description=opt_description, epilog=opt_epilog)
 	parser.add_option('-c', '--config', dest='config_file',
 			metavar='FILE', help='Override the configuration file path')
+	parser.add_option('-i', '--interval', dest='interval',
+			metavar='INTERVAL', default=None, type="int",
+			help='Daemon mode: How frequently in seconds checks are run')
+	parser.add_option('-m', '--min-interval', dest='min_interval',
+			metavar='INTERVAL', default=None, type="int",
+			help='Daemon mode: Minimum time in seconds between checks')
+	parser.add_option('-p', '--pidfile', dest='pidfile',
+			metavar='FILE', default=None,
+			help='Daemon mode: File to write process ID into.')
 	(options, args) = parser.parse_args()
+
+	if not 'daemon' in args and (options.interval != None
+			or options.min_interval != None or options.pidfile != None):
+		sys.stderr.write('ERROR: The "--interval", "--min-interval", and '
+				'"--pidfile" options must\n   be used with the "daemon" command.\n')
+		sys.exit(1)
 
 	if options.config_file:
 		configFile = options.config_file
@@ -302,5 +362,7 @@ if __name__ == '__main__':
 		status()
 	elif 'reset' in args:
 		reset()
+	elif 'daemon' in args:
+		daemon(options)
 	else:
 		main()

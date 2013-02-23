@@ -14,18 +14,35 @@ one may write, but with the additional features:
  * Remembers state so that a failure doesn't generate mail with every check.
  * Can check multiple issues from a single instance.
 
-It's meant to be a *much* simpler system than things like OpsView (which we
-use at work), Zenoss, or Zabbix, without the learning-curve of nagios
-(which most of the others listed above use under the hood).  nanomon was
-written after I had spent nearly a week trying to get the other solutions
-working on an only slightly unusual environment (CentOS 6, they still only
-really support CentOS 5).
+It's meant to be a *much* simpler system than things like OpsView (which
+we use in our data center), Zenoss, or Zabbix, without the learning-curve
+of nagios (which most of the others listed above use under the hood).
+nanomon was written after I had spent nearly a week trying to get the
+other solutions working.
 
-nanomon uses "cron" for the scheduling, and is a single program executable.
-nanomon runs external programs (as specified in the config file), which can
-be simple commands or shell scripts and determines success or failure by
-either exit code, string match, or Python function (including regular
-expression match).
+nanomon uses "cron" or it's own scheduler for the scheduling, and is a
+single program executable.  nanomon runs external programs (as specified
+in the config file), which can be simple commands or shell scripts
+and determines success or failure by either exit code, string match,
+or Python function (including regular expression match).
+
+Cron or Daemon Mode
+-------------------
+
+Probably the simplest way to deploy nanomon is to run it from cron every
+minute.  However, you can also run it in "daemon" mode, which allows you to
+run the checks on a different schedule than every minute.  This would allow
+you to run checks every 15 seconds or every 90 seconds, for example.
+
+Note, however, that nanomon does not run checks in parallel.  If you have
+10 checks that each could take 10 seconds before timing out, the check
+frequency could be extended to 100 seconds.
+
+The scheduler tries to start a round of checks "--interval" seconds after
+the start of the previous set of checks.  However, if the previous set of
+checks took longer than "--interval", the checks will start after
+"--min-interval" seconds (default 0) after the last set of checks finished.
+"--min-interval" allows you to set a minimum interval between checks.
 
 Download
 --------
@@ -88,23 +105,30 @@ sent.
 
 Running "nanomon --help" will display the help message:
 
-   Usage: nanomon [options] [status|reset]
+   Usage: nanomon [options] [status|reset|daemon]
 
-   A small service checking program, which can run an series of commands,
-   check their results, and report when they repeatedly fail, and when
-   they recover.
+   A small service checking program, which can run an series of commands, check
+   their results, and report when they repeatedly fail, and when they recover.
 
    Options:
      -h, --help            show this help message and exit
      -c FILE, --config=FILE
                            Override the configuration file path
+     -i INTERVAL, --interval=INTERVAL
+                           Daemon mode: How frequently in seconds checks are run
+     -m INTERVAL, --min-interval=INTERVAL
+                           Daemon mode: Minimum time in seconds between checks
+     -p FILE, --pidfile=FILE
+                           Daemon mode: File to write process ID into.
 
-   If called with the "reset" command, the status of all services is
-   reset to to the default state.  If called with the "status" command,
-   the state file is loaded and either "OK" is printed and nanomon exits
-   with 0, or information on the failed services is printed and nanomon
-   exits with 1.  If called with no command-line commands, a check of
-   all services is run.  Typically this is how it is called from cron.
+   If called with the "reset" command, the status of all services is reset to to
+   the default state.  If called with the "status" command, the state file is
+   loaded and either "OK" is printed and nanomon exits with 0, or information on
+   the failed services is printed and nanomon exits with 1.  If called with no
+   command-line commands, a check of all services is run.  Typically this is how
+   it is called from cron.  If called with the "daemon" command, nanomon loops
+   running its own scheduler rather than running from cron.  This is useful if
+   you want to run checks more frequently than every minute.
 
 License
 -------

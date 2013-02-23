@@ -1,4 +1,10 @@
 ================================
+Version 1.03 -- Sat Feb 23, 2013
+
+Log a message when an alert is generated (down or up).
+Added "daemon" mode to run more frequently than every minute.
+
+================================
 Version 1.02 -- Tue Feb 19, 2013
 
 "UP" e-mail now includes what services were previously down.
