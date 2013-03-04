@@ -264,8 +264,9 @@ def daemon(options):
 		sys.exit(1)
 	
 	if options.pidfile:
-		with open(options.pidfile, 'w') as fp:
-			fp.write('%s\n' % os.getpid())
+		fp = open(options.pidfile, 'w')
+		fp.write('%s\n' % os.getpid())
+		fp.close()
 		def remove_pidfile(*args):
 			os.remove(options.pidfile)
 			sys.exit(0)
