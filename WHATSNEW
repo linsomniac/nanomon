@@ -1,4 +1,9 @@
 ================================
+Version 1.04 -- Sun Mar 03, 2013
+
+Removing the "with" reference so it works with older Pythons.
+
+================================
 Version 1.03 -- Sat Feb 23, 2013
 
 Log a message when an alert is generated (down or up).
