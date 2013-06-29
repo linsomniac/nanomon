@@ -38,11 +38,11 @@ Note, however, that nanomon does not run checks in parallel.  If you have
 10 checks that each could take 10 seconds before timing out, the check
 frequency could be extended to 100 seconds.
 
-The scheduler tries to start a round of checks "--interval" seconds after
+The scheduler tries to start a round of checks "`--interval`" seconds after
 the start of the previous set of checks.  However, if the previous set of
-checks took longer than "--interval", the checks will start after
-"--min-interval" seconds (default 0) after the last set of checks finished.
-"--min-interval" allows you to set a minimum interval between checks.
+checks took longer than "`--interval`", the checks will start after
+"`--min-interval`" seconds (default 0) after the last set of checks finished.
+"`--min-interval`" allows you to set a minimum interval between checks.
 
 Download
 --------
@@ -62,7 +62,7 @@ Examples
 --------
 
 Simple example which calls Nagios NRPE scripts (a good source of scripts to
-perform various checks, see "yum search nrpe" or "apt-cache search nrpe"
+perform various checks, see "`yum search nrpe`" or "`apt-cache search nrpe`"
 for a list of available packages).
 
     statusfile('/var/lib/nanomon.status')
@@ -90,45 +90,45 @@ Installation
 
 The following steps will install nanomon:
 
-   - Copy "nanomon" to some location on the system, such as /usr/local/sbin
-   - Create a "/usr/local/etc/nanomon.conf" file.  (This location can be
-     changed by editing the top of "nanomon")
+   - Copy "`nanomon`" to some location on the system, such as `/usr/local/sbin`
+   - Create a "`/usr/local/etc/nanomon.conf`" file.  (This location can be
+     changed by editing the top of "`nanomon`")
    - Add "nanomon" to cron, for example with: `echo '* * * * * root
      /usr/local/sbin/nanomon' >/etc/cron.d/nanomon`
 
 If you would like nanomon to re-alert periodically if a failure persists,
-you can set up a cron job to run "nanomon reset", which acts like the
+you can set up a cron job to run "`nanomon reset`", which acts like the
 service has recovered (without sending an alert).  So if it is still down,
 this would cause another alert to be sent.  However, if the service
 recovers within 15 (default) minutes of the reset, no recovery will be
 sent.
 
-Running "nanomon --help" will display the help message:
+Running "`nanomon --help`" will display the help message:
 
-   Usage: nanomon [options] [status|reset|daemon]
+    Usage: nanomon [options] [status|reset|daemon]
 
-   A small service checking program, which can run an series of commands, check
-   their results, and report when they repeatedly fail, and when they recover.
+    A small service checking program, which can run an series of commands, check
+    their results, and report when they repeatedly fail, and when they recover.
 
-   Options:
-     -h, --help            show this help message and exit
-     -c FILE, --config=FILE
-                           Override the configuration file path
-     -i INTERVAL, --interval=INTERVAL
-                           Daemon mode: How frequently in seconds checks are run
-     -m INTERVAL, --min-interval=INTERVAL
-                           Daemon mode: Minimum time in seconds between checks
-     -p FILE, --pidfile=FILE
-                           Daemon mode: File to write process ID into.
+    Options:
+      -h, --help            show this help message and exit
+      -c FILE, --config=FILE
+                            Override the configuration file path
+      -i INTERVAL, --interval=INTERVAL
+                            Daemon mode: How frequently in seconds checks are run
+      -m INTERVAL, --min-interval=INTERVAL
+                            Daemon mode: Minimum time in seconds between checks
+      -p FILE, --pidfile=FILE
+                            Daemon mode: File to write process ID into.
 
-   If called with the "reset" command, the status of all services is reset to to
-   the default state.  If called with the "status" command, the state file is
-   loaded and either "OK" is printed and nanomon exits with 0, or information on
-   the failed services is printed and nanomon exits with 1.  If called with no
-   command-line commands, a check of all services is run.  Typically this is how
-   it is called from cron.  If called with the "daemon" command, nanomon loops
-   running its own scheduler rather than running from cron.  This is useful if
-   you want to run checks more frequently than every minute.
+    If called with the "reset" command, the status of all services is reset to to
+    the default state.  If called with the "status" command, the state file is
+    loaded and either "OK" is printed and nanomon exits with 0, or information on
+    the failed services is printed and nanomon exits with 1.  If called with no
+    command-line commands, a check of all services is run.  Typically this is how
+    it is called from cron.  If called with the "daemon" command, nanomon loops
+    running its own scheduler rather than running from cron.  This is useful if
+    you want to run checks more frequently than every minute.
 
 License
 -------
