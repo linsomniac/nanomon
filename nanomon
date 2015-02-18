@@ -22,6 +22,8 @@ def loadConfigFile(configFile):
 			self.statusfile = None
 			self.mailto = None
 			self.mailto_set = False
+			self.mailfrom = None
+			self.mailfrom_set = False
 			self.maxfailures = 15
 			self.mailcmd = '/usr/sbin/sendmail -t -oi'
 
@@ -38,6 +40,10 @@ def loadConfigFile(configFile):
 			self.mailto = mailto
 			self.mailto_set = True
 
+		def cmd_mailfrom(self, mailfrom):
+			self.mailfrom = mailfrom
+			self.mailfrom_set = True
+
 		def cmd_mailcmd(self, mailcmd):
 			self.mailcmd = mailcmd
 
@@ -49,6 +55,7 @@ def loadConfigFile(configFile):
 	namespace = {
 			'command' : config.cmd_command,
 			'mailto' : config.cmd_mailto,
+			'mailfrom' : config.cmd_mailfrom,
 			'statusfile' : config.cmd_statusfile,
 			'debug' : config.cmd_debug,
 			'mailcmd' : config.cmd_mailcmd,
@@ -169,11 +176,14 @@ def sendmail(config, isup, status):
 	if not config.mailto or not config.mailcmd:
 		return
 
+	if not config.mailfrom:
+		config.mailfrom = config.mailto
+
 	hostname = os.uname()[1]
 
 	proc = subprocess.Popen(config.mailcmd.split(),
 			stdin = subprocess.PIPE, close_fds = True)
-	proc.stdin.write('From: %s\n' % config.mailto)
+	proc.stdin.write('From: %s\n' % config.mailfrom)
 	proc.stdin.write('To: %s\n' % config.mailto)
 	if isup:
 		descriptions = status['last_alert_description']
@@ -215,6 +225,9 @@ def main():
 	if not config.mailto_set:
 		print 'ERROR: No "mailto" specified in config file'
 		sys.exit(1)
+
+	if not config.mailfrom_set:
+		print 'ERROR: No "mailfrom" specified in config file, using "mailto" value'
 
 	status = loadstatus(config)
 	runcommands(config)
