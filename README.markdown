@@ -67,6 +67,7 @@ for a list of available packages).
 
     statusfile('/var/lib/nanomon.status')
     mailto('user@example.com')
+    mailfrom('nanomon@example.com')
 
     #  this check has a description, otherwise the basename of the
     #  check command is used ("check_zfs.sh" in this example).
