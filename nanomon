@@ -227,7 +227,7 @@ def main():
 		sys.exit(1)
 
 	if not config.mailfrom_set:
-		print 'ERROR: No "mailfrom" specified in config file, using "mailto" value'
+		print 'WARNING: No "mailfrom" specified in config file, using "mailto" value'
 
 	status = loadstatus(config)
 	runcommands(config)
