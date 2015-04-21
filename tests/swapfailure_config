@@ -1,0 +1,8 @@
+statusfile('nanomon.status')
+#mailcmd(None)
+mailcmd('cat')
+mailto('root')
+mailfrom('root')
+command('./test_checker status_1', success = 0)
+command('./test_checker status_2', success = 0)
+alertafterfailures(5)
