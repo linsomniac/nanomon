@@ -35,11 +35,15 @@ class Checker:
             'python', self.test.nanomon_path, '--config', self.config_file],
             output=output)
 
-    def check_status(self, up=False):
+    def check_status(self, up=False, ok=False):
         output_str = ', UP' if up is True else ', DOWN'
+        if ok:
+            output_str = 'OK'
+        exit_code = 0 if ok is True else 1
         check_command(self.test, [
             'python', self.test.nanomon_path, '--config',
-            self.config_file, 'status'], output=output_str, exit_code=1)
+            self.config_file, 'status'], output=output_str,
+            exit_code=exit_code)
 
 
 class test_Basic(unittest.TestCase):
@@ -92,9 +96,7 @@ class test_Basic(unittest.TestCase):
         #  Check e-mail subject
         checker.age_status(
             output='Subject: DOWN: Service OUTAGE: test_checker')
-        check_command(self, [
-            'python', self.nanomon_path, '--config', config_file,
-            'status'], output=', DOWN', exit_code=1)
+        checker.check_status(up=False)
 
         for i in xrange(15):
             checker.age_status()
@@ -108,9 +110,7 @@ class test_Basic(unittest.TestCase):
         #  Check e-mail subject
         checker.age_status(
             output='Subject: UP: Service restored: test_checker')
-        check_command(self, [
-            'python', self.nanomon_path, '--config', config_file,
-            'status'], output='OK', exit_code=0)
+        checker.check_status(ok=True)
 
     def test_SwapFailure(self):
         config_file = 'swapfailure_config'
@@ -135,9 +135,7 @@ class test_Basic(unittest.TestCase):
         for i in xrange(10):
             check_command(self, [
                 'python', self.nanomon_path, '--config', config_file])
-            check_command(self, [
-                'python', self.nanomon_path, '--config', config_file,
-                'status'], output='OK', exit_code=0)
+            checker.check_status(ok=True)
 
         set_status(1, 0)
 
@@ -148,9 +146,7 @@ class test_Basic(unittest.TestCase):
         #  Check e-mail subject
         checker.age_status(
             output='Subject: DOWN: Service OUTAGE: test_checker')
-        check_command(self, [
-            'python', self.nanomon_path, '--config', config_file,
-            'status'], output=', DOWN', exit_code=1)
+        checker.check_status(up=False)
 
         set_status(0, 1)
 
@@ -158,9 +154,7 @@ class test_Basic(unittest.TestCase):
         #@@@ This currently is failing due to an enhancement request
         checker.age_status(
             output='Subject: UP: Service restored: test_checker')
-        check_command(self, [
-            'python', self.nanomon_path, '--config', config_file,
-            'status'], output='OK', exit_code=0)
+        checker.check_status(ok=True)
 
         for i in xrange(5):
             checker.age_status()
@@ -169,9 +163,7 @@ class test_Basic(unittest.TestCase):
         #  now should fail for the second one
         checker.age_status(
             output='Subject: DOWN: Service OUTAGE: test_checker')
-        check_command(self, [
-            'python', self.nanomon_path, '--config', config_file,
-            'status'], output=', DOWN', exit_code=1)
+        checker.check_status(up=False)
 
         for i in xrange(5):
             checker.age_status()
@@ -183,9 +175,7 @@ class test_Basic(unittest.TestCase):
         #  Check e-mail subject
         checker.age_status(
             output='Subject: UP: Service restored: test_checker')
-        check_command(self, [
-            'python', self.nanomon_path, '--config', config_file,
-            'status'], output='OK', exit_code=0)
+        checker.check_status(ok=True)
 
 
 unittest.main()
