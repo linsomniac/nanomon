@@ -24,6 +24,24 @@ def check_command(test, command, output=None, exit_code=0):
     test.assertEqual(proc.returncode, exit_code)
 
 
+class Checker:
+    def __init__(self, test, config_file):
+        self.test = test
+        self.config_file = config_file
+
+    def age_status(self, output=None):
+        '''Age the status of the system by running checks.'''
+        check_command(self.test, [
+            'python', self.test.nanomon_path, '--config', self.config_file],
+            output=output)
+
+    def check_status(self, up=False):
+        output_str = ', UP' if up is True else ', DOWN'
+        check_command(self.test, [
+            'python', self.test.nanomon_path, '--config',
+            self.config_file, 'status'], output=output_str, exit_code=1)
+
+
 class test_Basic(unittest.TestCase):
     @classmethod
     def setUp(self):
@@ -48,6 +66,9 @@ class test_Basic(unittest.TestCase):
                 pass
 
     def test_Basic(self):
+        config_file = 'basic_config'
+        checker = Checker(self, config_file)
+
         #  make checker fail
         with open('test_checker', 'w') as fp:
             fp.write('#!/bin/bash\n\nfalse\n')
@@ -57,34 +78,27 @@ class test_Basic(unittest.TestCase):
             self, ['python', self.nanomon_path, '--help'],
             'Usage: nanomon')
         check_command(self, [
-            'python', self.nanomon_path, '--config', 'basic_config',
+            'python', self.nanomon_path, '--config', config_file,
             '--help'], 'Usage: nanomon')
 
         check_command(self, [
-            'python', self.nanomon_path, '--config', 'basic_config',
+            'python', self.nanomon_path, '--config', config_file,
             'reset'])
 
         for i in xrange(15):
-            check_command(self, [
-                'python', self.nanomon_path, '--config', 'basic_config'])
-            check_command(self, [
-                'python', self.nanomon_path, '--config', 'basic_config',
-                'status'], output=', UP', exit_code=1)
+            checker.age_status()
+            checker.check_status(up=True)
 
         #  Check e-mail subject
-        check_command(self, [
-            'python', self.nanomon_path, '--config', 'basic_config'],
+        checker.age_status(
             output='Subject: DOWN: Service OUTAGE: test_checker')
         check_command(self, [
-            'python', self.nanomon_path, '--config', 'basic_config',
+            'python', self.nanomon_path, '--config', config_file,
             'status'], output=', DOWN', exit_code=1)
 
         for i in xrange(15):
-            check_command(self, [
-                'python', self.nanomon_path, '--config', 'basic_config'])
-            check_command(self, [
-                'python', self.nanomon_path, '--config', 'basic_config',
-                'status'], output=', DOWN', exit_code=1)
+            checker.age_status()
+            checker.check_status(up=False)
 
         #  make checker succeed
         with open('test_checker', 'w') as fp:
@@ -92,106 +106,85 @@ class test_Basic(unittest.TestCase):
         os.chmod('test_checker', 0755)
 
         #  Check e-mail subject
-        check_command(self, [
-            'python', self.nanomon_path, '--config', 'basic_config'],
+        checker.age_status(
             output='Subject: UP: Service restored: test_checker')
         check_command(self, [
-            'python', self.nanomon_path, '--config', 'basic_config',
+            'python', self.nanomon_path, '--config', config_file,
             'status'], output='OK', exit_code=0)
 
     def test_SwapFailure(self):
-        #  make checker fail
+        config_file = 'swapfailure_config'
+        checker = Checker(self, config_file)
+
+        def set_status(status_1, status_2):
+            with open('status_1', 'w') as fp:
+                fp.write('%s' % status_1)
+            with open('status_2', 'w') as fp:
+                fp.write('%s' % status_2)
+
         with open('test_checker', 'w') as fp:
             fp.write('#!/bin/bash\n\nexit `cat $1`\n')
         os.chmod('test_checker', 0755)
 
-        with open('status_1', 'w') as fp:
-            fp.write('0')
-        with open('status_2', 'w') as fp:
-            fp.write('0')
+        set_status(0, 0)
 
         check_command(self, [
-            'python', self.nanomon_path, '--config', 'swapfailure_config',
+            'python', self.nanomon_path, '--config', config_file,
             'reset'])
 
         for i in xrange(10):
             check_command(self, [
-                'python', self.nanomon_path, '--config', 'swapfailure_config'])
+                'python', self.nanomon_path, '--config', config_file])
             check_command(self, [
-                'python', self.nanomon_path, '--config', 'swapfailure_config',
+                'python', self.nanomon_path, '--config', config_file,
                 'status'], output='OK', exit_code=0)
 
-        #  make first one fail
-        with open('status_1', 'w') as fp:
-            fp.write('1')
-        with open('status_2', 'w') as fp:
-            fp.write('0')
+        set_status(1, 0)
 
         for i in xrange(5):
-            check_command(self, [
-                'python', self.nanomon_path, '--config',
-                'swapfailure_config'])
-            check_command(self, [
-                'python', self.nanomon_path, '--config', 'swapfailure_config',
-                'status'], output=', UP', exit_code=1)
+            checker.age_status()
+            checker.check_status(up=True)
 
         #  Check e-mail subject
-        check_command(self, [
-            'python', self.nanomon_path, '--config', 'swapfailure_config'],
+        checker.age_status(
             output='Subject: DOWN: Service OUTAGE: test_checker')
         check_command(self, [
-            'python', self.nanomon_path, '--config', 'swapfailure_config',
+            'python', self.nanomon_path, '--config', config_file,
             'status'], output=', DOWN', exit_code=1)
 
-        #  make only second one fail
-        with open('status_1', 'w') as fp:
-            fp.write('0')
-        with open('status_2', 'w') as fp:
-            fp.write('1')
+        set_status(0, 1)
 
         #  should receive an up from the first test
-        check_command(self, [
-            'python', self.nanomon_path, '--config', 'swapfailure_config'],
+        #@@@ This currently is failing due to an enhancement request
+        checker.age_status(
             output='Subject: UP: Service restored: test_checker')
         check_command(self, [
-            'python', self.nanomon_path, '--config', 'swapfailure_config',
+            'python', self.nanomon_path, '--config', config_file,
             'status'], output='OK', exit_code=0)
 
         for i in xrange(5):
-            check_command(self, [
-                'python', self.nanomon_path, '--config',
-                'swapfailure_config'])
-            check_command(self, [
-                'python', self.nanomon_path, '--config', 'swapfailure_config',
-                'status'], output=', UP', exit_code=1)
+            checker.age_status()
+            checker.check_status(up=True)
 
         #  now should fail for the second one
-        check_command(self, [
-            'python', self.nanomon_path, '--config', 'swapfailure_config'],
+        checker.age_status(
             output='Subject: DOWN: Service OUTAGE: test_checker')
         check_command(self, [
-            'python', self.nanomon_path, '--config', 'swapfailure_config',
+            'python', self.nanomon_path, '--config', config_file,
             'status'], output=', DOWN', exit_code=1)
 
         for i in xrange(5):
-            check_command(self, [
-                'python', self.nanomon_path, '--config', 'swapfailure_config'])
-            check_command(self, [
-                'python', self.nanomon_path, '--config', 'swapfailure_config',
-                'status'], output=', DOWN', exit_code=1)
+            checker.age_status()
+            checker.check_status(up=False)
 
         #  make checker succeed
-        with open('status_1', 'w') as fp:
-            fp.write('0')
-        with open('status_2', 'w') as fp:
-            fp.write('0')
+        set_status(0, 0)
 
         #  Check e-mail subject
-        check_command(self, [
-            'python', self.nanomon_path, '--config', 'swapfailure_config'],
+        checker.age_status(
             output='Subject: UP: Service restored: test_checker')
         check_command(self, [
-            'python', self.nanomon_path, '--config', 'swapfailure_config',
+            'python', self.nanomon_path, '--config', config_file,
             'status'], output='OK', exit_code=0)
 
 
