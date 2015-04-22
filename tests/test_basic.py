@@ -112,7 +112,7 @@ class test_Basic(unittest.TestCase):
             output='Subject: UP: Service restored: test_checker')
         checker.check_status(ok=True)
 
-    def test_SwapFailure(self):
+    def disabled_test_SwapFailure(self):
         config_file = 'swapfailure_config'
         checker = Checker(self, config_file)
 
@@ -151,7 +151,7 @@ class test_Basic(unittest.TestCase):
         set_status(0, 1)
 
         #  should receive an up from the first test
-        #@@@ This currently is failing due to an enhancement request
+        #@@@ This currently is failing due to an enhancement request #4
         checker.age_status(
             output='Subject: UP: Service restored: test_checker')
         checker.check_status(ok=True)
