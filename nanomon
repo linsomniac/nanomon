@@ -2,7 +2,8 @@
 #
 #  Extremely small and light weight monitoring.
 #
-#  Copyright (c) 2011, Sean Reifschneider <jafo@tummy.com>, All Rights Reserved
+#  Copyright (c) 2011-2015, Sean Reifschneider <jafo@tummy.com>
+#  All Rights Reserved
 #  Licensed under GPL version 3 or later, see "LICENSE" for more information.
 
 configFile = '/usr/local/etc/nanomon.conf'
