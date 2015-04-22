@@ -10,6 +10,7 @@ configFile = '/usr/local/etc/nanomon.conf'
 
 import os
 import sys
+import pickle
 import syslog
 syslog.openlog('nanomon', syslog.LOG_PID)
 
@@ -26,6 +27,7 @@ class configClass:
         self.mailfrom_set = False
         self.maxfailures = 15
         self.mailcmd = '/usr/sbin/sendmail -t -oi'
+        self.status = None
 
     def cmd_command(self, command, success, description=None):
         self.commands.append((command, success, description))
@@ -148,37 +150,37 @@ def runcommands(config):
     return runner.any_failed
 
 
-#######################
-def loadstatus(config):
-    import pickle
-    default = {
-        'failures': 0,
-        'isup': 1,
-        'descriptions': None,
-    }
+#############
+class Status:
+    def __init__(self, filename):
+        self.filename = filename
+        self.load()
 
-    try:
-        fp = open(config.statusfile, 'r')
-        filedata = fp.read()
-        fp.close()
+    def reset(self):
+        self.status = {
+            'failures': 0,
+            'isup': 1,
+            'descriptions': None,
+        }
+
+
+    def load(self):
+        self.reset()
 
         try:
-            data = pickle.loads(filedata)
-        except:
-            return default
-        return data
-    except IOError:
-        return default
+            with open(self.filename, 'r') as fp:
+                filedata = fp.read()
+                try:
+                    self.status = pickle.loads(filedata)
+                except:
+                    pass
+        except IOError:
+            pass
 
-
-###############################
-def savestatus(config, status):
-    import pickle
-    import os
-    fp = open(config.statusfile + '.tmp', 'w')
-    pickle.dump(status, fp)
-    fp.close()
-    os.rename(config.statusfile + '.tmp', config.statusfile)
+    def save(self):
+        with open(self.filename + '.tmp', 'w') as fp:
+            pickle.dump(self.status, fp)
+        os.rename(self.filename + '.tmp', self.filename)
 
 
 ##############
@@ -253,7 +255,8 @@ def main():
             'WARNING: No "mailfrom" specified in config file, using '
             '"mailto" value')
 
-    status = loadstatus(config)
+    config.status = Status(config.statusfile)
+    status = config.status.status
     runcommands(config)
 
     if config.any_failed:
@@ -288,7 +291,7 @@ def main():
 
         sendmail(config, status['isup'], status)
 
-    savestatus(config, status)
+    config.status.save()
 
 
 ####################
@@ -328,10 +331,11 @@ def daemon(options):
             time.sleep(sleep_time)
 
 
-#############
-def status():
+###################
+def check_status():
     config = loadconfig(configFile)
-    old_status = loadstatus(config)
+    config.status = Status(config.statusfile)
+    old_status = config.status.status
     if old_status['failures'] < 1:
         print 'OK'
         sys.exit(0)
@@ -349,11 +353,9 @@ def status():
 ############
 def reset():
     config = loadconfig(configFile)
-    old_status = loadstatus(config)
-    old_status['isup'] = 1
-    old_status['failures'] = 0
-    old_status['descriptions'] = None
-    savestatus(config, old_status)
+    old_status = Status(config.statusfile)
+    old_status.reset()
+    old_status.save()
 
 
 ############################
@@ -409,7 +411,7 @@ if __name__ == '__main__':
         configFile = options.config_file
 
     if 'status' in args:
-        status()
+        check_status()
     elif 'reset' in args:
         reset()
     elif 'daemon' in args:
